@@ -8,32 +8,77 @@ from frankapy.proto import PosePositionSensorMessage, ShouldTerminateSensorMessa
 from franka_interface_msgs.msg import SensorDataGroup
 
 from frankapy.utils import min_jerk, min_jerk_weight
-
-
 import rospy
+
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     fa = FrankaArm()
+    fa.open_gripper()
+    # import ipdb; ipdb.set_trace()
     fa.reset_joints()
 
     rospy.loginfo('Generating Trajectory')
+
+    starting_position = RigidTransform.load('examples/pickup_starting_position.tf')
+    fa.goto_pose(starting_position, duration=5, use_impedance=False)
+
     p0 = fa.get_pose()
     p1 = p0.copy()
+    block = [p0.translation[0]-0.1,
+            p0.translation[1]-0.2,
+            p0.translation[2]-0.18]
+
+    goal = [p0.translation[0]-0.1,
+            p0.translation[1]-0.4,
+            p0.translation[2]+0.1]
+
     T_delta = RigidTransform(
-        translation=np.array([0, 0, 0.2]),
-        rotation=RigidTransform.z_axis_rotation(np.deg2rad(30)), 
-                            from_frame=p1.from_frame, to_frame=p1.from_frame)
-    p1 = p1 * T_delta
-    fa.goto_pose(p1)
+        translation=np.array([block[0]-p0.translation[0], block[1]-p0.translation[1], block[2]-p0.translation[2]]),
+        rotation=RigidTransform.z_axis_rotation(np.deg2rad(0)), 
+                            from_frame='world', to_frame='world')
+    p1 = T_delta * p1
+    # fa.goto_pose(p1, duration=5, use_impedance=False)
+
+    p2 = p1.copy() #fa.get_pose()
+    T_delta = RigidTransform(
+        translation=np.array([goal[0]-p1.translation[0], goal[1]-p1.translation[1], goal[2]-p1.translation[2]]),
+        rotation=RigidTransform.z_axis_rotation(np.deg2rad(0)), 
+                            from_frame='world', to_frame='world')
+    p2 = T_delta * p2
+
+    # fa.goto_pose(p2, duration=5, use_impedance=False)
+    # import ipdb; ipdb.set_trace()
 
     T = 5
     dt = 0.02
     ts = np.arange(0, T, dt)
     current_gripper_width = 0.08
-    has_closed = False
 
     weights = [min_jerk_weight(t, T) for t in ts]
-    pose_traj = [p1.interpolate_with(p0, w) for w in weights]
+    pose_traj1 = [p0.interpolate_with(p1, w) for w in weights]
+    pose_traj2 = [p1.interpolate_with(p2, w) for w in weights]
+
+    pose_traj = pose_traj1 + pose_traj2
+
+    x = [pose.translation[0] for pose in pose_traj]
+    y = [pose.translation[1] for pose in pose_traj]
+    z = [pose.translation[2] for pose in pose_traj]
+
+    # fig, axes = plt.subplots(1, 3, figsize=(15, 15))
+    # axes[0].plot(x, label='x')
+    # axes[1].plot(y, label='y')
+    # axes[2].plot(z, label='z')
+    # axes[0].legend()
+    # axes[1].legend()
+    # axes[2].legend()
+    # plt.show()
+    # import ipdb; ipdb.set_trace()
+
+    T = 10
+    ts = np.arange(0, T, dt)
 
     z_stiffness_traj = [min_jerk(100, 800, t, T) for t in ts]
 
@@ -44,7 +89,7 @@ if __name__ == "__main__":
     rospy.loginfo('Publishing pose trajectory...')
     # To ensure skill doesn't end before completing trajectory, make the buffer time much longer than needed
     fa.goto_pose(pose_traj[1], duration=T, dynamic=True, buffer_time=10,
-        cartesian_impedances=FC.DEFAULT_TRANSLATIONAL_STIFFNESSES[:2] + [z_stiffness_traj[1]] + FC.DEFAULT_ROTATIONAL_STIFFNESSES
+        cartesian_impedances=[80,80,80] + FC.DEFAULT_ROTATIONAL_STIFFNESSES
     )
     init_time = rospy.Time.now().to_time()
     for i in range(2, len(ts)):
@@ -55,7 +100,7 @@ if __name__ == "__main__":
         )
         fb_ctrlr_proto = CartesianImpedanceSensorMessage(
             id=i, timestamp=timestamp,
-            translational_stiffnesses=FC.DEFAULT_TRANSLATIONAL_STIFFNESSES[:2] + [z_stiffness_traj[i]],
+            translational_stiffnesses=[80,80,80],
             rotational_stiffnesses=FC.DEFAULT_ROTATIONAL_STIFFNESSES
         )
         ros_msg = make_sensor_group_msg(
@@ -64,17 +109,12 @@ if __name__ == "__main__":
             feedback_controller_sensor_msg=sensor_proto2ros_msg(
                 fb_ctrlr_proto, SensorDataMessageType.CARTESIAN_IMPEDANCE)
             )
-
-        if not has_closed:
-            current_gripper_width -= 0.0005
-        else:
-            current_gripper_width += 0.0005
-
-        if current_gripper_width < 0.002:
-            has_closed = True
-
+        
+        p_now = fa.get_pose()
+        if p_now.translation[1]<p1.translation[1]+0.03:
+            current_gripper_width = 0.06
+        
         fa.goto_gripper(current_gripper_width, block=False)
-
         
         rospy.loginfo('Publishing: ID {}'.format(traj_gen_proto_msg.id))
         pub.publish(ros_msg)
