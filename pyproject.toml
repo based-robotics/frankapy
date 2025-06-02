@@ -33,13 +33,3 @@ cuda-nvrtc = ">=12"
 
 [tool.pixi.activation]
 scripts = ["catkin_ws/devel/setup.sh"]
-
-
-[workspace]
-authors = ["Lev Kozlov <kozlov.l.a10@gmail.com>"]
-channels = ["conda-forge", "robostack-staging"]
-name = "frankapy"
-platforms = ["linux-64"]
-version = "0.1.0"
-
-[tasks]

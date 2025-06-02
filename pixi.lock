@@ -1659,7 +1659,7 @@ packages:
 - pypi: ./
   name: frankapy
   version: 0.1.0
-  sha256: 5a85ef2c1dc01fc5eb545357efb843f2337c94021b9875197266451c0c634f0c
+  sha256: ff3ac0c3b9c14fba911fdf39772581264f1cf316824e31d1fb9541cb4109e7dc
   requires_dist:
   - numpy
   - matplotlib
