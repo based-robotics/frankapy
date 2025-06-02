@@ -25,13 +25,13 @@ where:
     ./start_control_pc.sh -i iam-space -u iam-lab -p 12345678 -d ~/Documents/franka-interface -r 1 -s 0
     "
 
-control_pc_uname="iam-lab"
+control_pc_uname="based"
 control_pc_use_password=0
 control_pc_password=""
-control_pc_franka_interface_path="Documents/franka-interface"
+control_pc_franka_interface_path="/home/based/github.com/based/mlr/franka-interface"
 start_franka_interface=1
 robot_number=1
-robot_ip="172.16.0.2"
+robot_ip="192.168.50.221"
 with_gripper=1
 old_gripper=0
 log_on_franka_interface=0
@@ -77,7 +77,7 @@ while getopts ':h:i:u:p:d:r:a:s:g:o:l:e' option; do
 done
 shift $((OPTIND - 1))
 
-workstation_ip_address="`hostname`"
+workstation_ip_address="192.168.50.60"
 
 # Notify the IP addresses being used.
 echo "Control PC IP uname/address: "$control_pc_uname"@"$control_pc_ip_address
