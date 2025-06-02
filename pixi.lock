@@ -610,6 +610,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zziplib-0.13.69-h27826a3_1.tar.bz2
       - pypi: https://files.pythonhosted.org/packages/6a/31/d998ab378cf23e53fd5434cd970f985654f3ec7afcc724a1743276442f89/autolab_core-1.1.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/90/ee/30050750aaebf1f5ea285df83e9463432b8e1798f0a27c1e2ffb1e1a2a91/catkin_tools-0.9.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e3/51/9b208e85196941db2f0654ad0357ca6388ab3ed67efdbfc799f35d1f83aa/colorlog-6.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/50/3d/9373ad9c56321fdab5b41197068e1d8c25883b3fea29dd361f9b55116869/dill-0.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cb/bd/b394387b598ed84d8d0fa90611a90bee0adc2021820ad5729f7ced74a8e2/imageio-2.37.0-py3-none-any.whl
@@ -618,6 +619,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/6c/28/dd72947e59a6a8c856448a5e74da6201cb5502ddff644fbc790e4bd40b9a/multiprocess-0.70.18-py39-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d5/f0/8fbc882ca80cf077f1b246c0e3c3465f7f415439bdea6b899f6b19f61f70/networkx-3.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b7/b1/b763aa119209f63ea60df4ad9664edd5abfaf9ca6ba374543cb5a5b8a365/numpy_quaternion-2023.0.4-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/e6/39/b5ff4cc46f5e87016eb3df981132adf26bdb30327dee6e5b752307e7add8/osrf_pycommon-2.0.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/04/9e/91fe10ea09e2383f0d0531cf3da765fa01b3b9918e85df92081813259cf4/ruamel.yaml-0.18.12-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a2/2a/5b27602e7a4344c1334e26bf4739746206b7a60a8acdba33a61473468b73/ruamel.yaml.clib-0.2.12-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/f0/cc/1a58efefb9b17c60d15626b33416728003028d5d51f0521482151a222560/scikit_image-0.24.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -626,7 +628,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/dc/4f/027ac688b4fcd4d6f04344e3dbca69cee4154454a9a578a5aa1edc62f75b/setproctitle-1.3.6-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/32/d5/f9a850d79b0851d1d4ef6456097579a9005b31fea68726a4ae5f2d82ddd9/threadpoolctl-3.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/3a/4f/73714b1c1d339b1545cac28764e39f88c69468b5e10e51f327f9aa9d55b9/tifffile-2024.8.30-py3-none-any.whl
-      - pypi: ./
+      - pypi: .
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-3_kmp_llvm.conda
   build_number: 3
@@ -948,6 +950,16 @@ packages:
   purls: []
   size: 1576122
   timestamp: 1663568213559
+- pypi: https://files.pythonhosted.org/packages/90/ee/30050750aaebf1f5ea285df83e9463432b8e1798f0a27c1e2ffb1e1a2a91/catkin_tools-0.9.5-py3-none-any.whl
+  name: catkin-tools
+  version: 0.9.5
+  sha256: 1ca884d3b0aa22ff321d9ed25015420300f5e12f658eec30dae539fc7dd585f2
+  requires_dist:
+  - pyyaml
+  - catkin-pkg>=0.3.0
+  - osrf-pycommon>0.1.1
+  - setuptools
+  requires_python: '>=3.5'
 - conda: https://conda.anaconda.org/conda-forge/noarch/catkin_pkg-1.0.0-pyhd8ed1ab_1.conda
   sha256: f210ad987595a6ea0bf37ff600a820627e9f7a5eba2e6b2db02f714e925e8624
   md5: 016600de0d8b1a8c5ccc99845f51f9da
@@ -1656,15 +1668,17 @@ packages:
   - pkg:pypi/fonttools?source=hash-mapping
   size: 2365234
   timestamp: 1748466030176
-- pypi: ./
+- pypi: .
   name: frankapy
   version: 0.1.0
-  sha256: ff3ac0c3b9c14fba911fdf39772581264f1cf316824e31d1fb9541cb4109e7dc
+  sha256: d07b9e964fcd1c6d2566181ad742dd185f7684f794c61e946e9a774d9b449685
   requires_dist:
   - numpy
   - matplotlib
   - autolab-core>=1.1.1,<2
   - numpy-quaternion>=2023.0.4,<2024
+  - empy
+  - catkin-tools>=0.9.5,<0.10
   requires_python: '>=3.9'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/freeglut-3.2.2-h9c3ff4c_1.tar.bz2
@@ -4430,6 +4444,13 @@ packages:
   purls: []
   size: 388297
   timestamp: 1729197896717
+- pypi: https://files.pythonhosted.org/packages/e6/39/b5ff4cc46f5e87016eb3df981132adf26bdb30327dee6e5b752307e7add8/osrf_pycommon-2.0.2-py3-none-any.whl
+  name: osrf-pycommon
+  version: 2.0.2
+  sha256: bba7292491db7518f84be4f11502f008cc24086790d5d8bfca2936f925bdabb5
+  requires_dist:
+  - importlib-metadata ; python_full_version < '3.8'
+  requires_python: '>=3.5'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/p11-kit-0.24.1-hc5aa10d_0.tar.bz2
   sha256: aa8d3887b36557ad0c839e4876c0496e0d670afe843bf5bba4a87764b868196d
   md5: 56ee94e34b71742bbdfa832c974e47a8
