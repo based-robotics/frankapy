@@ -15,7 +15,7 @@ import roslib
 roslib.load_manifest('franka_interface_msgs')
 import rospy
 from actionlib import SimpleActionClient
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, WrenchStamped
 from franka_interface_msgs.msg import ExecuteSkillAction, SensorDataGroup
 from franka_interface_msgs.srv import GetCurrentFrankaInterfaceStatusCmd
 from franka_gripper.msg import *
@@ -82,6 +82,8 @@ class FrankaArm:
                 '/franka_gripper_{}/grasp'.format(robot_num)
         self._gripper_joint_states_name = \
                 '/franka_gripper_{}/joint_states'.format(robot_num)
+        self._franka_ft_name = \
+                '/netft_data'
         if robot_num == 1:
             self._sensor_publisher_name = \
                 '/franka_ros_interface/sensor'
@@ -95,6 +97,7 @@ class FrankaArm:
         self._with_gripper = with_gripper
         self._old_gripper = old_gripper
         self._last_gripper_command = None
+        self._ft_wrench = None
 
         # init ROS
         if init_node:
@@ -104,6 +107,7 @@ class FrankaArm:
         self._collision_boxes_pub = BoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
         self._joint_state_pub = rospy.Publisher('franka_virtual_joints_{}'.format(robot_num), JointState, queue_size=10)
         self._sensor_pub = rospy.Publisher(self._sensor_publisher_name, SensorDataGroup, queue_size=100)
+        self._ft_sub = rospy.Subscriber(self._franka_ft_name, WrenchStamped)
         
         self._state_client = FrankaArmStateClient(
                 new_ros_node=False,
@@ -161,6 +165,19 @@ class FrankaArm:
         self._collision_proj_axes = np.zeros((3, 15))
         self._box_vertices_offset = np.ones([8, 3])
         self._box_transform = np.eye(4)
+
+    def ft_sensor_callback(self, msg):
+        self._ft_wrench = np.array([
+            msg.wrench.force.x,
+            msg.wrench.force.y,
+            msg.wrench.force.z,
+            msg.wrench.torque.x,
+            msg.wrench.torque.y,
+            msg.wrench.torque.z
+        ])
+
+    def get_ft_wrench(self):
+        return self._ft_wrench
 
     def wait_for_franka_interface(self, timeout=None):
         """
