@@ -15,7 +15,8 @@ import roslib
 roslib.load_manifest('franka_interface_msgs')
 import rospy
 from actionlib import SimpleActionClient
-from sensor_msgs.msg import JointState, WrenchStamped
+from sensor_msgs.msg import JointState
+from geometry_msgs.msg import WrenchStamped
 from franka_interface_msgs.msg import ExecuteSkillAction, SensorDataGroup
 from franka_interface_msgs.srv import GetCurrentFrankaInterfaceStatusCmd
 from franka_gripper.msg import *
@@ -107,7 +108,7 @@ class FrankaArm:
         self._collision_boxes_pub = BoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
         self._joint_state_pub = rospy.Publisher('franka_virtual_joints_{}'.format(robot_num), JointState, queue_size=10)
         self._sensor_pub = rospy.Publisher(self._sensor_publisher_name, SensorDataGroup, queue_size=100)
-        self._ft_sub = rospy.Subscriber(self._franka_ft_name, WrenchStamped)
+        self._ft_sub = rospy.Subscriber(self._franka_ft_name, WrenchStamped, self.ft_sensor_callback, queue_size=10)
         
         self._state_client = FrankaArmStateClient(
                 new_ros_node=False,
