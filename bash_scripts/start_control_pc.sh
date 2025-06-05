@@ -32,12 +32,14 @@ control_pc_franka_interface_path="/home/based/github.com/based/mlr/franka-interf
 start_franka_interface=1
 robot_number=1
 robot_ip="192.168.50.221"
+ft_ip="192.168.50.222"
 with_gripper=1
+with_ft=1
 old_gripper=0
 log_on_franka_interface=0
 stop_on_error=0
 
-while getopts ':h:i:u:p:d:r:a:s:g:o:l:e' option; do
+while getopts ':h:i:u:p:d:r:a:s:g:o:l:e:f' option; do
   case "${option}" in
     h) echo "$usage"
        exit
@@ -64,6 +66,9 @@ while getopts ':h:i:u:p:d:r:a:s:g:o:l:e' option; do
     l) log_on_franka_interface=$OPTARG
        ;;
     e) stop_on_error=$OPTARG
+       ;;
+    f) with_ft=1
+       ft_ip=$OPTARG
        ;;
     :) printf "missing argument for -%s\n" "$OPTARG" >&2
        echo "$usage" >&2
@@ -132,4 +137,12 @@ else
     echo "Will not start franka gripper on the control pc."
 fi
 
+if [ "$with_ft" -eq 1 ]; then
+start_franka_ft_on_control_pc_path="$DIR/start_franka_ft_on_control_pc.sh"
+echo "Will ssh to control PC and start ROS ft node."
+gnome-terminal --working-directory="$DIR" -- bash $start_franka_ft_on_control_pc_path $control_pc_uname $control_pc_ip_address $workstation_ip_address $control_pc_franka_interface_path $ft_ip $control_pc_use_password $control_pc_password
+sleep 3
+else
+    echo "Will not start franka ft on the control pc."
+fi
 echo "Done"
