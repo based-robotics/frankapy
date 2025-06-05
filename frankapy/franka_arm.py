@@ -16,9 +16,10 @@ from rclpy.action import ActionClient
 from rclpy.node import Node
 
 from sensor_msgs.msg import JointState
-from franka_interface_msgs.msg import SensorDataGroup
-from franka_interface_msgs.action import ExecuteSkill
-from franka_msgs.action import Homing, Move, Grasp
+from geometry_msgs.msg import WrenchStamped
+from franka_interface_msgs.msg import ExecuteSkillAction, SensorDataGroup
+from franka_interface_msgs.srv import GetCurrentFrankaInterfaceStatusCmd
+from franka_gripper.msg import *
 
 from .skill_list import *
 from .exceptions import *
@@ -87,21 +88,33 @@ class FrankaArm(Node):
                 '/franka_gripper_{}/grasp'.format(robot_num)
         self._gripper_joint_states_name = \
                 '/franka_gripper_{}/joint_states'.format(robot_num)
-        self._joint_state_publisher_name = \
-                '/franka_virtual_joints_{}'.format(robot_num)
-        self._sensor_data_publisher_name = \
-                '/sensor_data_{}/sensor_data'.format(robot_num)
-
+        self._franka_ft_name = \
+                '/netft_data'
+        if robot_num == 1:
+            self._sensor_publisher_name = \
+                '/franka_ros_interface/sensor'
+        else:
+            self._sensor_publisher_name = \
+                '/franka_ros_interface_{}/sensor'.format(robot_num)
+                
         self._connected = False
         self._in_skill = False
         self._in_gripper_skill = False
         self._offline = offline
         self._with_gripper = with_gripper
         self._old_gripper = old_gripper
+        self._last_gripper_command = None
+        self._ft_wrench = None
 
-        self._collision_boxes_pub = CollisionBoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
-        self._sensor_data_pub = self.create_publisher(SensorDataGroup, self._sensor_data_publisher_name, 10)
-        self._joint_state_pub = self.create_publisher(JointState, self._joint_state_publisher_name, 10)
+        # init ROS
+        if init_node:
+            rospy.init_node(rosnode_name,
+                            disable_signals=True,
+                            log_level=ros_log_level)
+        self._collision_boxes_pub = BoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
+        self._joint_state_pub = rospy.Publisher('franka_virtual_joints_{}'.format(robot_num), JointState, queue_size=10)
+        self._sensor_pub = rospy.Publisher(self._sensor_publisher_name, SensorDataGroup, queue_size=100)
+        self._ft_sub = rospy.Subscriber(self._franka_ft_name, WrenchStamped, self.ft_sensor_callback, queue_size=10)
         
         self._robot_state_client = FrankaRobotStateClient(
                 robot_state_server_name=self._robot_state_server_name,
@@ -156,6 +169,19 @@ class FrankaArm(Node):
         self._collision_proj_axes = np.zeros((3, 15))
         self._box_vertices_offset = np.ones([8, 3])
         self._box_transform = np.eye(4)
+
+    def ft_sensor_callback(self, msg):
+        self._ft_wrench = np.array([
+            msg.wrench.force.x,
+            msg.wrench.force.y,
+            msg.wrench.force.z,
+            msg.wrench.torque.x,
+            msg.wrench.torque.y,
+            msg.wrench.torque.z
+        ])
+
+    def get_ft_wrench(self):
+        return self._ft_wrench
 
     def wait_for_franka_interface(self, timeout=None):
         """
