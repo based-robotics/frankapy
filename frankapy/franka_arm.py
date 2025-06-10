@@ -20,6 +20,7 @@ from geometry_msgs.msg import WrenchStamped
 from franka_interface_msgs.msg import ExecuteSkillAction, SensorDataGroup
 from franka_interface_msgs.srv import GetCurrentFrankaInterfaceStatusCmd
 from franka_gripper.msg import *
+from os import path
 
 from .skill_list import *
 from .exceptions import *
@@ -28,7 +29,8 @@ from .franka_robot_state_client import FrankaRobotStateClient
 from .franka_interface_status_client import FrankaInterfaceStatusClient
 from .franka_constants import FrankaConstants as FC
 from .franka_interface_common_definitions import *
-from .ros_utils import CollisionBoxesPublisher
+from .ros_utils import BoxesPublisher  
+import pinocchio as pin
 
 
 class FrankaArm(Node):
@@ -170,6 +172,13 @@ class FrankaArm(Node):
         self._box_vertices_offset = np.ones([8, 3])
         self._box_transform = np.eye(4)
 
+        # Get path to the current file
+        _path = path.dirname(path.abspath(__file__))
+        urdf_path = _path + "/../../IsaacGymEnvs/assets/industreal/urdf/industreal_franka.urdf"
+        self.pin_model = pin.buildModelFromUrdf(urdf_path)
+        self.pin_data = self.pin_model.createData()
+
+
     def ft_sensor_callback(self, msg):
         self._ft_wrench = np.array([
             msg.wrench.force.x,
@@ -180,8 +189,17 @@ class FrankaArm(Node):
             msg.wrench.torque.z
         ])
 
-    def get_ft_wrench(self):
-        return self._ft_wrench
+    def get_ft_wrench(self, joints):
+        pin.framesForwardKinematics(self.model, self.data, np.array([*joints, 0, 0]),)
+        ee_frame = self.data.oMf[self.model.getFrameId("ft_sensor")]
+        ee_rot = ee_frame.rotation
+
+        ft_wrench = self._ft_wrench.copy()
+        ft_wrench[:3] = ee_rot.T @ ft_wrench[:3]
+        ft_wrench[3:] = ee_rot.T @ ft_wrench[3:]
+        ft_wrench = -ft_wrench
+
+        return ft_wrench
 
     def wait_for_franka_interface(self, timeout=None):
         """
