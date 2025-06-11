@@ -192,6 +192,16 @@ class FrankaArm:
         ee_rot = ee_frame.rotation
 
         ft_wrench = self._ft_wrench.copy()
+        ft_wrench -= np.array(
+            [
+                -7.280208,
+                -2.524136,
+                -35.879028,
+                0.019363,
+                -0.09604499999999999,
+                -0.273733,
+            ]
+        )
         ft_wrench[:3] = ee_rot.T @ ft_wrench[:3]
         ft_wrench[3:] = ee_rot.T @ ft_wrench[3:]
         ft_wrench = -ft_wrench
