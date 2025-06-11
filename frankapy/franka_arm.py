@@ -187,8 +187,8 @@ class FrankaArm:
         ])
 
     def get_ft_wrench(self, joints):
-        pin.framesForwardKinematics(self.model, self.data, np.array([*joints, 0, 0]),)
-        ee_frame = self.data.oMf[self.model.getFrameId("ft_sensor")]
+        pin.framesForwardKinematics(self.pin_model, self.pin_data, np.array([*joints, 0, 0]),)
+        ee_frame = self.pin_data.oMf[self.pin_model.getFrameId("ft_sensor")]
         ee_rot = ee_frame.rotation
 
         ft_wrench = self._ft_wrench.copy()
