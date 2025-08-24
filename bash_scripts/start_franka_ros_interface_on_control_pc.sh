@@ -23,7 +23,7 @@ cd $control_pc_franka_interface_path
 bash
 source $rosmaster_path $control_pc_ip_address $workstation_ip_address
 source $catkin_ws_setup_path
-roslaunch franka_ros_interface franka_ros_interface.launch robot_num:=$robot_number
+ros2 launch franka_ros_interface franka_ros_interface.launch.py robot_num:=$robot_number
 bash
 EOSSH
 else
@@ -32,7 +32,7 @@ cd $control_pc_franka_interface_path
 bash
 source $rosmaster_path $control_pc_ip_address $workstation_ip_address
 source $catkin_ws_setup_path
-roslaunch franka_ros_interface franka_ros_interface.launch robot_num:=$robot_number
+ros2 launch franka_ros_interface franka_ros_interface.launch.py robot_num:=$robot_number
 bash
 EOSSH
 fi

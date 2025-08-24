@@ -9,14 +9,15 @@ control_pc_use_password=${6}
 control_pc_password=${7}
 
 rosmaster_path="bash_scripts/set_rosmaster.sh"
-catkin_ws_setup_path="catkin_ws/devel/setup.bash"
+catkin_ws_setup_path="catkin_ws/install/setup.bash"
 
 if [ "$control_pc_ip_address" = "localhost" ]; then
     
     cd $HOME
     cd $control_pc_franka_interface_path
     source $catkin_ws_setup_path
-    roslaunch franka_ft_sensor franka_ft_sensor.launch ft_ip:=$ft_ip
+    # roslaunch franka_ft_sensor franka_ft_sensor.launch ft_ip:=$ft_ip
+    ros2 launch franka_ft_sensor franka_ft_sensor.launch.py ft_ip:=$ft_ip
     bash
 else
 if [ "$control_pc_use_password" = "0" ]; then
@@ -26,7 +27,7 @@ cd $control_pc_franka_interface_path
 bash
 source $rosmaster_path $control_pc_ip_address $workstation_ip_address
 source $catkin_ws_setup_path
-roslaunch franka_ft_sensor franka_ft_sensor.launch ft_ip:=$ft_ip
+ros2 launch franka_ft_sensor franka_ft_sensor.launch.py ft_ip:=$ft_ip
 bash
 EOSSH
 else
