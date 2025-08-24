@@ -4,3 +4,6 @@
 [submodule "ros2_ws/src/franka_interface_msgs"]
 	path = ros2_ws/src/franka_interface_msgs
 	url = https://github.com/iamlab-cmu/franka_interface_msgs.git
+[submodule "third_party/libfranka"]
+	path = third_party/libfranka
+	url = git@github.com:frankarobotics/libfranka.git
