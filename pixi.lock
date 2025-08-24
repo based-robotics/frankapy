@@ -2627,7 +2627,7 @@ packages:
 - pypi: ./
   name: frankapy
   version: 0.1.0
-  sha256: 95e75188bc58d52c791eec9a9a360ec975bf28360e3d059812382d13eb57ed8d
+  sha256: a9ab01c2d79632b7e14a4b5598440c64d991c223f71df9e555e34f2ec52aa8ef
   requires_dist:
   - numpy
   - matplotlib
@@ -2635,6 +2635,7 @@ packages:
   - numpy-quaternion>=2023.0.4,<2024
   - empy
   - catkin-tools>=0.9.5,<0.10
+  - scipy
   requires_python: '>=3.9'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/freeglut-3.2.2-ha6d2627_3.conda

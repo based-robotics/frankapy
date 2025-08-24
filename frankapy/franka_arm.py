@@ -19,6 +19,8 @@ from sensor_msgs.msg import JointState
 from franka_interface_msgs.msg import SensorDataGroup
 from franka_interface_msgs.action import ExecuteSkill
 from franka_msgs.action import Homing, Move, Grasp
+from geometry_msgs.msg import WrenchStamped
+from os import path
 
 from .skill_list import *
 from .exceptions import *
@@ -28,6 +30,9 @@ from .franka_interface_status_client import FrankaInterfaceStatusClient
 from .franka_constants import FrankaConstants as FC
 from .franka_interface_common_definitions import *
 from .ros_utils import CollisionBoxesPublisher
+# import pinocchio as pin
+
+from scipy.spatial.transform import Rotation as R
 
 
 class FrankaArm(Node):
@@ -39,7 +44,9 @@ class FrankaArm(Node):
             with_gripper=True,
             old_gripper=False,
             offline=False,
-            init_rclpy=True):
+            init_rclpy=True,
+            ft2ee_transform: np.ndarray = None, # (x, y, z, qx, qy, qz, qw)
+        ):
 
         """
         Initialize a FrankaArm.
@@ -91,6 +98,7 @@ class FrankaArm(Node):
                 '/franka_virtual_joints_{}'.format(robot_num)
         self._sensor_data_publisher_name = \
                 '/sensor_data_{}/sensor_data'.format(robot_num)
+        self._franka_ft_name = '/netft_data'
 
         self._connected = False
         self._in_skill = False
@@ -98,6 +106,7 @@ class FrankaArm(Node):
         self._offline = offline
         self._with_gripper = with_gripper
         self._old_gripper = old_gripper
+        self._ft_wrench = None
 
         self._collision_boxes_pub = CollisionBoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
         self._sensor_data_pub = self.create_publisher(SensorDataGroup, self._sensor_data_publisher_name, 10)
@@ -110,6 +119,20 @@ class FrankaArm(Node):
         self._franka_interface_status_client = FrankaInterfaceStatusClient(
                 franka_interface_status_server_name=self._franka_interface_status_server_name,
                 offline=self._offline)
+
+        self._ft_sub = self.create_subscription(WrenchStamped, self._franka_ft_name, self.ft_sensor_callback, 10)
+        # TODO: fix
+        self._ft2ee_transform = RigidTransform(
+            translation=ft2ee_transform[:3],
+            rotation=R.from_quat(ft2ee_transform[3:]).as_rotation_matrix(),
+            from_frame='franka_tool',
+            to_frame='ft_sensor'
+        )
+        # Get path to the current file
+        # _path = path.dirname(path.abspath(__file__))
+        # urdf_path = _path + "/../../IsaacGymEnvs/assets/industreal/urdf/industreal_franka.urdf"
+        # self.pin_model = pin.buildModelFromUrdf(urdf_path)
+        # self.pin_data = self.pin_model.createData()
 
         if not self._offline:
             # set signal handler to handle ctrl+c and kill sigs
@@ -353,6 +376,39 @@ class FrankaArm(Node):
         feedback = feedback_msg.feedback
         self.get_logger().info('Received Gripper Feedback')
 
+    def ft_sensor_callback(self, msg):
+        self._ft_wrench = np.array([
+            msg.wrench.force.x,
+            msg.wrench.force.y,
+            msg.wrench.force.z,
+            msg.wrench.torque.x,
+            msg.wrench.torque.y,
+            msg.wrench.torque.z
+        ])
+
+    def get_ft_wrench(self, joints):
+    #     pin.framesForwardKinematics(self.pin_model, self.pin_data, np.array([*joints, 0, 0]))
+    #     ee_frame = self.pin_data.oMf[self.pin_model.getFrameId("ft_sensor")]
+    #     ee_rot = ee_frame.rotation
+        ee_frame = self.get_pose() * self._ft2ee_transform
+        ee_rot = ee_frame.rotation
+
+        ft_wrench = self._ft_wrench.copy()
+        ft_wrench -= np.array(
+            [
+                -7.280208,
+                -2.524136,
+                -35.879028,
+                0.019363,
+                -0.09604499999999999,
+                -0.273733,
+            ]
+        )
+        ft_wrench[:3] = ee_rot.T @ ft_wrench[:3]
+        ft_wrench[3:] = ee_rot.T @ ft_wrench[3:]
+        ft_wrench = -ft_wrench
+
+        return ft_wrench
 
     """
     Controls
