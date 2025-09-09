@@ -26,6 +26,7 @@ where:
     "
 
 control_pc_uname="based"
+control_pc_ip_address="192.168.50.153"
 control_pc_use_password=0
 control_pc_password=""
 control_pc_franka_interface_path="/home/based/github.com/based/mlr_ros2/franka-interface"
@@ -34,7 +35,7 @@ start_franka_interface=1
 robot_number=1
 robot_ip="192.168.50.221"
 ft_ip="192.168.50.222"
-with_gripper=1
+with_gripper=0
 with_ft=1
 old_gripper=0
 log_on_franka_interface=0
