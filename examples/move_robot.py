@@ -5,13 +5,10 @@ from frankapy import FrankaArm
 
 
 if __name__ == "__main__":
-    print("Creating Franka Arm instance")
-    fa = FrankaArm(with_gripper=False)
-    print("Franka Arm instance created")
+    fa = FrankaArm(offline=True)
     
     # reset franka to its home joints
     fa.reset_joints()
-    print("Franka Arm reset to home position")
 
     # read functions
     T_ee_world = fa.get_pose()
@@ -20,26 +17,24 @@ if __name__ == "__main__":
     joints = fa.get_joints()
     print('Joints: {}'.format(joints))
 
-    # gripper_width = fa.get_gripper_width()
-    # print('Gripper width: {}'.format(gripper_width))
+    gripper_width = fa.get_gripper_width()
+    print('Gripper width: {}'.format(gripper_width))
 
-    # # gripper controls
-    # print('Closing gripper')
-    # fa.close_gripper()
+    # gripper controls
+    print('Closing gripper')
+    fa.close_gripper()
 
-    # print('Opening gripper to a specified position')
-    # fa.goto_gripper(0.02)
+    print('Opening gripper to a specified position')
+    fa.goto_gripper(0.02)
 
-    # print('Opening gripper all the way')
-    # fa.open_gripper()
+    print('Opening gripper all the way')
+    fa.open_gripper()
 
     # joint controls
     print('Rotating last joint')
     joints = fa.get_joints()
     joints[6] += np.deg2rad(45)
-    print("Moving to joints: ", joints)
     fa.goto_joints(joints)
-    print('Rotating last joint back')
     joints[6] -= np.deg2rad(45)
     fa.goto_joints(joints)
 

@@ -125,7 +125,7 @@ class FrankaArm(Node):
         self._ft2ee_transform = RigidTransform(
             translation=ft2ee_transform[:3],
             rotation=R.from_quat(ft2ee_transform[3:]).as_matrix(),
-            from_frame='franka_tool',
+            from_frame='franka_tool_base',
             to_frame='ft_sensor'
         )
         # Get path to the current file
@@ -1796,6 +1796,21 @@ class FrankaArm(Node):
             return tool_pose
         else:
             return tool_base_pose
+
+    def get_twist(self):
+        """
+        Returns the current end-effector twist.
+
+        Returns
+        -------
+            twist : :obj:`numpy.ndarray`
+                A numpy ndarray of 6 floats that represents the current
+                end-effector twist.
+        """
+        jnt_vel = self.get_joint_velocities()
+        jac = self.get_jacobian(self.get_joints())
+
+        return jac @ jnt_vel
 
     def get_joints(self):
         """
