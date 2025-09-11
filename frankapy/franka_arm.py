@@ -74,7 +74,6 @@ class FrankaArm(Node):
         if init_rclpy:
             rclpy.init()
         super().__init__(node_name)
-        print(f"[DEBUG] Initialized ROS2 node: {node_name}")
 
         # 30 means WARN while 20 means INFO
         self.get_logger().set_level(20)
@@ -100,7 +99,6 @@ class FrankaArm(Node):
         self._sensor_data_publisher_name = \
                 '/sensor_data_{}/sensor_data'.format(robot_num)
         self._franka_ft_name = '/netft_data'
-        print(f"[DEBUG] Set up service and topic names for robot {robot_num}")
 
         self._connected = False
         self._in_skill = False
@@ -113,7 +111,6 @@ class FrankaArm(Node):
         self._collision_boxes_pub = CollisionBoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
         self._sensor_data_pub = self.create_publisher(SensorDataGroup, self._sensor_data_publisher_name, 10)
         self._joint_state_pub = self.create_publisher(JointState, self._joint_state_publisher_name, 10)
-        print("[DEBUG] Created publishers")
         
         self._robot_state_client = FrankaRobotStateClient(
                 robot_state_server_name=self._robot_state_server_name,
@@ -122,7 +119,6 @@ class FrankaArm(Node):
         self._franka_interface_status_client = FrankaInterfaceStatusClient(
                 franka_interface_status_server_name=self._franka_interface_status_server_name,
                 offline=self._offline)
-        print("[DEBUG] Created robot state and interface status clients")
 
         self._ft_sub = self.create_subscription(WrenchStamped, self._franka_ft_name, self.ft_sensor_callback, 10)
         # TODO: fix
@@ -132,7 +128,6 @@ class FrankaArm(Node):
             from_frame='franka_tool',
             to_frame='ft_sensor'
         )
-        print(f"[DEBUG] Set up force/torque sensor subscription and transform")
         # Get path to the current file
         # _path = path.dirname(path.abspath(__file__))
         # urdf_path = _path + "/../../IsaacGymEnvs/assets/industreal/urdf/industreal_franka.urdf"
@@ -140,19 +135,15 @@ class FrankaArm(Node):
         # self.pin_data = self.pin_model.createData()
 
         if not self._offline:
-            print("[DEBUG] Running in online mode, setting up connection to real robot")
             # set signal handler to handle ctrl+c and kill sigs
             signal.signal(signal.SIGINT, self._sigint_handler_gen())
 
             self._execute_skill_action_client = ActionClient(self, ExecuteSkill, self._execute_skill_action_server_name)
             self._execute_skill_action_client.wait_for_server()
-            print("[DEBUG] Connected to execute_skill action server")
 
             self.wait_for_franka_interface()
-            print("[DEBUG] Franka interface is ready")
 
             if self._with_gripper and not self._old_gripper:
-                print("[DEBUG] Setting up new gripper clients")
                 self._gripper_homing_client = ActionClient(self, Homing, self._gripper_homing_action_server_name)
                 self._gripper_homing_client.wait_for_server()
                 self._gripper_move_client = ActionClient(self, Move, self._gripper_move_action_server_name)
@@ -162,18 +153,17 @@ class FrankaArm(Node):
 
                 self._gripper_state_client = GripperStateClient(gripper_state_server_name=self._gripper_state_server_name,
                                                                 offline=self._offline)
-                print("[DEBUG] Gripper clients initialized and connected")
 
             # done init ROS
             self._connected = True
-            print("[DEBUG] Robot connection established successfully")
         else:
-            print("[DEBUG] Running in offline mode - no connection to real robot")
+            if self._with_gripper and not self._old_gripper:
+                self._gripper_state_client = GripperStateClient(gripper_state_server_name=self._gripper_state_server_name,
+                                                                offline=self._offline)
 
         # set default identity tool delta pose
         self._tool_delta_pose = RigidTransform(from_frame='franka_tool', 
                                                to_frame='franka_tool_base')
-        print("[DEBUG] Set default tool transform")
 
         # Precompute things and preallocate np memory for collision checking
         self._collision_boxes_data = np.zeros((len(FC.COLLISION_BOX_SHAPES), 10))
@@ -192,8 +182,6 @@ class FrankaArm(Node):
         self._collision_proj_axes = np.zeros((3, 15))
         self._box_vertices_offset = np.ones([8, 3])
         self._box_transform = np.eye(4)
-        print("[DEBUG] Initialized collision checking data structures")
-        print("[DEBUG] FrankaArm initialization complete")
 
     def wait_for_franka_interface(self, timeout=None):
         """
@@ -327,7 +315,7 @@ class FrankaArm(Node):
             FrankaArmFrankaInterfaceNotReadyException if franka-interface is not ready
         """
         if self._offline:
-            logging.warn('In offline mode, FrankaArm will not execute real robot commands.')
+            logging.warning('In offline mode, FrankaArm will not execute real robot commands.')
             return
 
         if not self.is_skill_done():  
@@ -745,6 +733,9 @@ class FrankaArm(Node):
         Raises:
             ValueError: If is_joints_reachable(joints) returns False
         """
+        if self._offline:
+            logging.warning('In offline mode, FrankaArm will not execute real robot commands.')
+            return
 
         joints = np.array(joints).tolist() 
 
@@ -1446,6 +1437,9 @@ class FrankaArm(Node):
             # small lag
             sleep(FC.GRIPPER_CMD_SLEEP_TIME)
         else:
+            if self._offline:
+                logging.warning('Gripper action not available in offline mode.')
+                return
             if grasp:
                 grasp_skill = Grasp.Goal()
                 grasp_skill.width = width
@@ -1813,7 +1807,6 @@ class FrankaArm(Node):
                 7 floats that represent each joint's position in radians.
         """
         jnts= self._robot_state_client.get_joints()
-        print("Current Joints: ", jnts)
         return jnts
 
     def get_joint_torques(self):

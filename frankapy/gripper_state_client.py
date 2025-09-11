@@ -18,7 +18,7 @@ class GripperStateClient(Node):
 
     def get_current_gripper_state(self):
         if self._offline:
-            current_gripper_state = JointState()
+            current_gripper_state = JointState(position=[0.0, 0.0], velocity=[0.0, 0.0], effort=[0.0])
             return current_gripper_state
 
         self.future = self._gripper_state_client.call_async(self.req)
