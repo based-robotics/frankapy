@@ -33,9 +33,9 @@ control_pc_franka_interface_path="/home/based/github.com/based/mlr_ros2/franka-i
 
 start_franka_interface=1
 robot_number=1
-robot_ip="192.168.50.221"
-ft_ip="192.168.50.222"
-with_gripper=0
+robot_ip="192.168.50.211"
+ft_ip="192.168.50.212"
+with_gripper=1
 with_ft=1
 old_gripper=0
 log_on_franka_interface=0
