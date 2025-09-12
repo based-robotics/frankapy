@@ -79,7 +79,7 @@ class FrankaArm(Node):
         self.get_logger().set_level(20)
 
         self._execute_skill_action_server_name = \
-                'execute_skill_action_server_node_{}/execute_skill'.format(robot_num)
+                '/execute_skill_action_server_node_{}/execute_skill'.format(robot_num)
         self._gripper_state_server_name = \
                 '/get_current_gripper_state_server_node_{}/gripper_state'.format(robot_num)
         self._robot_state_server_name = \
@@ -98,7 +98,7 @@ class FrankaArm(Node):
                 '/franka_virtual_joints_{}'.format(robot_num)
         self._sensor_data_publisher_name = \
                 '/sensor_data_{}/sensor_data'.format(robot_num)
-        self._franka_ft_name = '/netft_data'
+        self._franka_ft_name = '/sensor_data_{}/netft_data'.format(robot_num)
 
         self._connected = False
         self._in_skill = False
@@ -108,15 +108,17 @@ class FrankaArm(Node):
         self._old_gripper = old_gripper
         self._ft_wrench = None
 
-        self._collision_boxes_pub = CollisionBoxesPublisher('franka_collision_boxes_{}'.format(robot_num))
+        self._collision_boxes_pub = CollisionBoxesPublisher(prefix=node_name, topic_name='franka_collision_boxes_{}'.format(robot_num))
         self._sensor_data_pub = self.create_publisher(SensorDataGroup, self._sensor_data_publisher_name, 10)
         self._joint_state_pub = self.create_publisher(JointState, self._joint_state_publisher_name, 10)
         
         self._robot_state_client = FrankaRobotStateClient(
+            prefix=node_name,
                 robot_state_server_name=self._robot_state_server_name,
                 offline=self._offline)
 
         self._franka_interface_status_client = FrankaInterfaceStatusClient(
+                prefix=node_name,
                 franka_interface_status_server_name=self._franka_interface_status_server_name,
                 offline=self._offline)
 
@@ -1632,6 +1634,9 @@ class FrankaArm(Node):
             skill_desc : :obj:`str` 
                 Skill description to use for logging on control-pc.
         """
+        if self._offline:
+            logging.warning('Gripper action not available in offline mode.')
+            return
         homing_skill = Homing.Goal()
 
         self._in_gripper_skill = True

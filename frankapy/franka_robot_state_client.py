@@ -10,9 +10,9 @@ from .utils import franka_pose_to_rigid_transform
 
 class FrankaRobotStateClient(Node):
 
-    def __init__(self, robot_state_server_name='/get_current_robot_state_server_node_1/robot_state', offline=False):
-        super().__init__('franka_arm_state_client')
-        
+    def __init__(self, prefix, robot_state_server_name='/get_current_robot_state_server_node_1/robot_state', offline=False):
+        super().__init__(f'franka_arm_state_client_{prefix}')
+
         self._offline = offline
         if not self._offline:
             self._robot_state_client = self.create_client(GetCurrentRobotState, robot_state_server_name)

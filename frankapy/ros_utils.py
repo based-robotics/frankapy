@@ -6,8 +6,8 @@ import quaternion
 
 class CollisionBoxesPublisher(Node):
 
-    def __init__(self, topic_name, world_frame='panda_link0'):
-        super().__init__('collision_boxes_publisher')
+    def __init__(self, prefix, topic_name, world_frame='panda_link0'):
+        super().__init__(f'collision_boxes_publisher_{prefix}')
         self._boxes_pub = self.create_publisher(MarkerArray, topic_name, 10)
         self._world_frame = world_frame
 

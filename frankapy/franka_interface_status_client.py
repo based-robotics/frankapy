@@ -6,8 +6,8 @@ from franka_interface_msgs.srv import GetCurrentFrankaInterfaceStatus
 
 class FrankaInterfaceStatusClient(Node):
 
-    def __init__(self, franka_interface_status_server_name='/get_current_franka_interface_status_server_node_1/franka_interface_status', offline=False):
-        super().__init__('franka_interface_status_client')
+    def __init__(self, prefix, franka_interface_status_server_name='/get_current_franka_interface_status_server_node_1/franka_interface_status', offline=False):
+        super().__init__(f'franka_interface_status_client_{prefix}')
 
         self._offline = offline
         if not self._offline:
