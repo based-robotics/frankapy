@@ -6,8 +6,8 @@ from franka_interface_msgs.srv import GetCurrentGripperState
 
 class GripperStateClient(Node):
 
-    def __init__(self, gripper_state_server_name='/get_current_gripper_state_server_node_1/gripper_state', offline=False):
-        super().__init__('gripper_state_client')
+    def __init__(self, prefix, gripper_state_server_name='/get_current_gripper_state_server_node_1/gripper_state', offline=False):
+        super().__init__(f'gripper_state_client_{prefix}')
 
         self._offline = offline
         if not self._offline:

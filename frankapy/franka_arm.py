@@ -153,14 +153,14 @@ class FrankaArm(Node):
                 self._gripper_grasp_client = ActionClient(self, Grasp, self._gripper_grasp_action_server_name)
                 self._gripper_grasp_client.wait_for_server()
 
-                self._gripper_state_client = GripperStateClient(gripper_state_server_name=self._gripper_state_server_name,
+                self._gripper_state_client = GripperStateClient(prefix=node_name,
                                                                 offline=self._offline)
 
             # done init ROS
             self._connected = True
         else:
             if self._with_gripper and not self._old_gripper:
-                self._gripper_state_client = GripperStateClient(gripper_state_server_name=self._gripper_state_server_name,
+                self._gripper_state_client = GripperStateClient(prefix=node_name, gripper_state_server_name=self._gripper_state_server_name,
                                                                 offline=self._offline)
 
         # set default identity tool delta pose
